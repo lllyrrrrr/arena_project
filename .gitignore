@@ -1,0 +1,28 @@
+# 系统
+.DS_Store
+
+# 原始数据与大型产物不进仓库（来源与重建方法见 README / data/DATASET_CARD.md）
+data/*
+!data/DATASET_CARD.md
+results/*
+!results/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# LaTeX 编译产物
+*.aux
+*.log
+*.out
+*.toc
+*.thm
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+
+# IDE
+.vscode/

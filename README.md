@@ -16,17 +16,6 @@ arena_project/
 ├── scripts/flatten.py              ← 原始→平表的转换脚本
 └── .venv/                          ← Python3.13环境（pandas+pyarrow）
 ```
-
-## 快速上手
-
-```python
-import pandas as pd
-df = pd.read_parquet('data/battles_flat.parquet')   # 需要 pip install pandas pyarrow
-df.head()
-```
-
-注意：跑代码请用项目自带环境 `.venv/bin/python`，全局python没装pandas。
-
 ## 48列速览（三组）
 
 | 列组 | 内容 |

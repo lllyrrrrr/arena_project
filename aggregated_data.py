@@ -102,5 +102,11 @@ print("\n部分列缺失率(应为 1.0 的一侧):")
 print(unified.groupby("source")[["evaluation_session_id", "is_refusal"]]
       .apply(lambda g: g.isna().mean()))
 
+# 各取一行完整打印，人工核对两期结构是否一致
+print("\n===== t2_100k 完整样例行 =====")
+print(unified[unified["source"] == "t2_100k"].iloc[0])
+print("\n===== t3_140k 完整样例行 =====")
+print(unified[unified["source"] == "t3_140k"].iloc[0])
+
 unified.to_parquet(OUT / "aggregated_data.parquet", index=False)
 print("\n已写入 results/aggregated_data.parquet")

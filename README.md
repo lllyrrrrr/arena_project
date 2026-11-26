@@ -1,6 +1,6 @@
 # LMArena 人类偏好投票数据集
 
-**是什么**：LMArena（原Chatbot Arena，UC Berkeley）是全球最大的大模型评测平台：用户提一个问题，两个匿名模型同时回答，用户投票谁更好（A胜/B胜/平局/都差）。本数据集是其开源的**13.5万张真实投票快照**（2025-04-17 ~ 07-24，53个模型，126种语言），每行=一张两两对战投票。来源 `lmarena-ai/arena-human-preference-140k`（HF，CC-BY-4.0），获取记录见 `data/DATA_MANIFEST.md`。
+**是什么**：LMArena（原Chatbot Arena，UC Berkeley）是全球最大的大模型评测平台：用户提一个问题，两个匿名模型同时回答，用户投票谁更好（A胜/B胜/平局/都差）。本数据集是其开源的**13.5万张真实投票快照**（2025-04-17 ~ 07-24，53个模型，126种语言），每行=一张两两对战投票。来源 `lmarena-ai/arena-human-preference-140k`（HF，CC-BY-4.0）。
 
 ## 文件夹结构
 

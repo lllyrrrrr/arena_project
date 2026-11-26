@@ -1,11 +1,14 @@
 # 系统
 .DS_Store
 
-# 原始数据与大型产物不进仓库（来源与重建方法见 README / data/DATASET_CARD.md）
+# 原始数据与运行产物不进仓库（数据来源见 README / data/DATASET_CARD.md）
 data/*
 !data/DATASET_CARD.md
-results/*
-!results/.gitkeep
+results/
+
+# Beamer 只保留 tex 源码，图片与演讲稿不进仓库
+beamer/*
+!beamer/*.tex
 
 # Python
 __pycache__/

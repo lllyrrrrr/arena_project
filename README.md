@@ -1,43 +1,67 @@
-# LMArena 人类偏好投票数据集
+# LMArena 评测选票中的回答形式偏向与排名失真
 
-**是什么**：LMArena（原Chatbot Arena，UC Berkeley）是全球最大的大模型评测平台：用户提一个问题，两个匿名模型同时回答，用户投票谁更好（A胜/B胜/平局/都差）。本数据集是其开源的**13.5万张真实投票快照**（2025-04-17 ~ 07-24，53个模型，126种语言），每行=一张两两对战投票。来源 `lmarena-ai/arena-human-preference-140k`（HF，CC-BY-4.0）。
+上海财经大学「数据分析与可视化」课程期末项目。基于 LMArena（原 Chatbot Arena）两期公开盲测选票，检验回答篇幅与 Markdown 排版对投票结果的影响，以及这种形式偏向如何放大两期公开榜单的名次变动。
 
 ## 文件夹结构
 
-```
+```text
 arena_project/
 ├── data/
-│   ├── battles_flat.parquet        ← 分析用这个！135634行×48列平表（已清洗展平）
-│   ├── train-0000{0..6}.parquet    ← 原始数据7分片（勿动）
-│   ├── preview_1000.csv            ← 前1000行预览，Excel可开
-│   ├── DATASET_CARD.md             ← 官方字段定义
-│   ├── DATA_MANIFEST.md            ← 来源/版本/抓取日期
-│   └── download.sh                 ← 数据下载脚本
-├── scripts/flatten.py              ← 原始→平表的转换脚本
-└── .venv/                          ← Python3.13环境（pandas+pyarrow）
+│   └── DATASET_CARD.md             ← 140k 官方字段定义（原始 parquet / csv 体积较大，未进仓库）
+├── src/
+│   ├── 0_aggregated_data.py        ← 合并 2024(100k) 与 2025(140k) 两期选票，统一语言码与票型
+│   ├── 1_extract_features.py       ← 剥离代码块后提取字数与 Markdown 特征，输出 results/features.parquet
+│   ├── 2_main_stats.py             ← 样本筛选、跨期漂移与基础统计
+│   ├── 3_dissociation_stats.py     ← 长度差与排版密度的分层分离检验
+│   ├── 4_bradley_terry_model_estimate.py  ← 控风格 Bradley-Terry 模型（M0–M3）、聚类稳健 SE 与 Bootstrap
+│   ├── 5_bradley_terry_model_validate.py  ← 与 LMArena 官方基础榜/控风格榜交叉核验
+│   ├── 6_style_extension.py        ← 计数/密度双口径、数学题交互项与数学子集重拟合
+│   ├── 7_cluster_check.py          ← 同人/同会话重复投票聚类效应核查
+│   ├── 8_undecided_votes.py        ← 平局（tie）与双差（both_bad）票机制分析
+│   └── 9_numbers_sheet.py          ← 汇总各环节关键统计量
+├── plot/
+│   └── 0_length_drift.py ~ 10_cross_year_divergence.py  ← 11 张分析图脚本，输出至 results/figures/
+└── beamer/
+    └── beamer_overleaf.tex         ← 汇报用 Beamer 源码（不含图与演讲稿）
 ```
-## 48列速览（三组）
 
-| 列组 | 内容 |
+> `results/` 不进仓库，运行 `src/` 和 `plot/` 时会自动生成统计表、中间 parquet 和图表。
+
+## 数据来源与主样本口径
+
+- **盲测选票（合计 241,768 票）**：来自 Hugging Face 上 LMArena 公开的两期数据——2024 期 100k（106,134 票，本地文件名 `data/arena_explorer_100k.parquet`）与 2025 期 140k（135,634 票，`lmarena-ai/arena-human-preference-140k`，CC-BY-4.0，本地 7 分片 `data/train-0000{0..6}-of-00007.parquet`）。
+- **官方榜单对照数据**：`src/5_bradley_terry_model_validate.py` 需读取 `data/leaderboard_2026/` 下的 `lb_2024_full_overall.csv`、`lb_2024_style_overall.csv`、`lb_2025_full_english.csv`、`lb_2025_style_english.csv`。
+- **主样本筛选**：两期统一取当年 **6 月 20 日–7 月 24 日**（35 天）、英文、单轮对话、提问与双侧回答均非空，得到主样本 2024 年 26,469 票、2025 年 27,380 票。分胜负票用于偏好与排名建模，平局与双差票单独分析，不作噪声丢弃。
+
+## 复现顺序
+
+环境为 Python 3.13，主要依赖：`pandas`、`pyarrow`、`numpy`、`scipy`、`scikit-learn`、`matplotlib`。
+
+数据按上面路径放好后，在仓库根目录依次执行：
+
+1. **跑统计与建模**：按编号顺序运行 `src/0_aggregated_data.py` 到 `src/9_numbers_sheet.py`，中间产物和汇总结果会写入 `results/`。
+2. **跑可视化绘图**：运行 `plot/` 下各脚本（`0` 到 `10`），图表会同时保存为 `.pdf` 和 `.png` 到 `results/figures/`。
+
+## Beamer 编译说明
+
+`beamer/beamer_overleaf.tex` 推荐使用 **Overleaf（编译器选 XeLaTeX）** 或本地 TeXLive 编译，字体均为 TeXLive 内置（Fandol / TeX Gyre），无需额外安装字体。
+
+仓库里只保留了 `.tex` 源码，没有上传图片，**直接编译会报缺图**，按下面两步配好图片即可：
+
+1. **放入数据图**：先跑完 `src/` 与 `plot/`，从生成的 `results/figures/` 里挑出对应的 `.pdf` 图放到 `beamer/figures/`（Overleaf 中放在 `figures/` 目录）。其中 `fig0`–`fig6` 文件名完全一致；另有 4 张因调整过 PPT 页序，脚本输出名与 `.tex` 中引用的编号错位，放入前需对应改名：
+
+| `plot/` 脚本输出（`results/figures/`） | `beamer_overleaf.tex` 引用名 |
 |---|---|
-| 标识9列 | `id` `model_a` `model_b` `winner`(4类) `evaluation_session_id` `evaluation_order` `language` `is_code` `timestamp` |
-| `meta_*` 26列 | 回答风格特征（官方预计算）：`sum_assistant_a/b_tokens`长度、`header_count`标题数、`list_count`列表数、`bold_count`加粗数等 |
-| `tag_*` 12列 | 问题类别标注：math/creative_writing/IF指令遵循/7个criteria布尔标签 |
-| `prompt` | 用户提示词原文（从嵌套对话中提取） |
+| `fig10_cross_year_divergence.pdf` | `fig7_cross_year_divergence.pdf` |
+| `fig7_logit_boundary.pdf` | `fig8_logit_boundary.pdf` |
+| `fig8_undecided_heatmap.pdf` | `fig9_undecided_heatmap.pdf` |
+| `fig9_official_validation.pdf` | `fig10_official_validation.pdf` |
+
+2. **处理 3 张外部示意图**：P3 与 P6 引用了 `chatgpt_title_feedback.png`、`arena_profile.png`、`huggingface.png`，这三张未进仓库，自行补图到 `figures/` 或注释掉 `.tex` 中对应的 `\includegraphics` 行即可正常编译。
 
 ## 使用注意点
 
-**结构层**
-- 官方预计算好回答风格特征（`meta_*`：回答长度/token数、markdown标题数、列表数、加粗数）和问题类别标签（`tag_*`：math/创意写作/指令遵循等布尔标签）——无需写文本处理代码，直接可分析
-- `prompt` 已从嵌套对话提取为单列
-
-**口径层**
-1. 一行=一张票，但同一 `evaluation_session_id` 可能含多票——**观测不完全独立**，统计时按独立单位说明
-2. `winner` 四类：model_a/model_b/tie/both_bad，平局+双差占27.5%——**"胜率"先定义分母**（全票？非平局票？）
-3. `language` 含 `und`（未识别）约8.7%——业务意义的未知，不是缺失值
-4. 顶层字段0缺失 ≠ 数据干净——und语言、空文本、极端长回答都要单独核查
-
-**解读层**
-- 数据测的是**偏好不是正确**：长相特征可量化，内容质量不可直接测量——结论限于"形式特征与投票的关系"
-- 时间窗仅为2025年4–7月快照，不代表当前模型版图
-- 引用prompt示例注意license：用户内容CC-BY-4.0，模型输出归各厂商条款
+- **独立性**：同一评审（2024）/ 同一 `evaluation_session_id`（2025）可能含多张选票，观测不完全独立；建模已采用聚类稳健标准误与整簇 Bootstrap，样本外划分按人/会话分组。
+- **代码块去污染**：提取 Markdown 标题/加粗/列表前已先剥离围栏与行内代码，避免代码注释里的 `#` 被误计为标题。
+- **解读边界**：选票反映的是用户主观偏好而非客观正确；回答篇幅未经随机分配，结果代表统计关联，不能直接解读为因果效应。
+- **许可提醒**：引用 prompt 示例时注意原数据条款——用户内容为 CC-BY-4.0，模型输出归各厂商条款。

@@ -7,7 +7,8 @@
 ```text
 arena_project/
 ├── data/
-│   └── DATASET_CARD.md             ← 140k 官方字段定义（原始 parquet / csv 体积较大，未进仓库）
+│   ├── DATASET_CARD.md             ← 140k 官方字段定义
+│   └── leaderboard_2026/           ← 已提取好的官方榜单对照 CSV（原始 parquet 见下方链接）
 ├── src/
 │   ├── 0_aggregated_data.py        ← 合并 2024(100k) 与 2025(140k) 两期选票，统一语言码与票型
 │   ├── 1_extract_features.py       ← 剥离代码块后提取字数与 Markdown 特征，输出 results/features.parquet
@@ -21,25 +22,30 @@ arena_project/
 │   └── 9_numbers_sheet.py          ← 汇总各环节关键统计量
 ├── plot/
 │   └── 0_length_drift.py ~ 10_cross_year_divergence.py  ← 11 张分析图脚本，输出至 results/figures/
+├── results/                        ← 已跑出的统计汇总表（.md / .csv）与模型排名（ranks_t2/t3.parquet）
 └── beamer/
     └── beamer_overleaf.tex         ← 汇报用 Beamer 源码（不含图与演讲稿）
 ```
 
-> `results/` 不进仓库，运行 `src/` 和 `plot/` 时会自动生成统计表、中间 parquet 和图表。
+> 原始选票数据（合计约 2.2 GB）以及大型中间表（`results/features.parquet` 等）超过 GitHub 体积限制未进仓库，按下方链接下载即可复现。
 
-## 数据来源与主样本口径
+## 原始数据链接与主样本口径
 
-- **盲测选票（合计 241,768 票）**：来自 Hugging Face 上 LMArena 公开的两期数据——2024 期 100k（106,134 票，本地文件名 `data/arena_explorer_100k.parquet`）与 2025 期 140k（135,634 票，`lmarena-ai/arena-human-preference-140k`，CC-BY-4.0，本地 7 分片 `data/train-0000{0..6}-of-00007.parquet`）。
-- **官方榜单对照数据**：`src/5_bradley_terry_model_validate.py` 需读取 `data/leaderboard_2026/` 下的 `lb_2024_full_overall.csv`、`lb_2024_style_overall.csv`、`lb_2025_full_english.csv`、`lb_2025_style_english.csv`。
-- **主样本筛选**：两期统一取当年 **6 月 20 日–7 月 24 日**（35 天）、英文、单轮对话、提问与双侧回答均非空，得到主样本 2024 年 26,469 票、2025 年 27,380 票。分胜负票用于偏好与排名建模，平局与双差票单独分析，不作噪声丢弃。
+| 数据 | 来源链接（Hugging Face） | 本地放置路径 |
+|---|---|---|
+| 2024 期盲测选票（100k，106,134 票） | [lmarena-ai/arena-human-preference-100k](https://huggingface.co/datasets/lmarena-ai/arena-human-preference-100k) | `data/arena_explorer_100k.parquet` |
+| 2025 期盲测选票（140k，135,634 票） | [lmarena-ai/arena-human-preference-140k](https://huggingface.co/datasets/lmarena-ai/arena-human-preference-140k) | `data/train-0000{0..6}-of-00007.parquet` |
+| 官方榜单快照（外部核验用） | [lmarena-ai/leaderboard-dataset](https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset) | 已提取为 CSV 放在 `data/leaderboard_2026/` |
+
+- **主样本筛选**：两期合计 241,768 票，统一取当年 **6 月 20 日–7 月 24 日**（35 天）、英文、单轮对话、提问与双侧回答均非空，得到主样本 2024 年 26,469 票、2025 年 27,380 票。分胜负票用于偏好与排名建模，平局与双差票单独分析，不作噪声丢弃。
 
 ## 复现顺序
 
 环境为 Python 3.13，主要依赖：`pandas`、`pyarrow`、`numpy`、`scipy`、`scikit-learn`、`matplotlib`。
 
-数据按上面路径放好后，在仓库根目录依次执行：
+原始数据按上表路径放好后，在仓库根目录依次执行：
 
-1. **跑统计与建模**：按编号顺序运行 `src/0_aggregated_data.py` 到 `src/9_numbers_sheet.py`，中间产物和汇总结果会写入 `results/`。
+1. **跑统计与建模**：按编号顺序运行 `src/0_aggregated_data.py` 到 `src/9_numbers_sheet.py`，结果写入 `results/`（汇总统计表与模型排名已直接附在仓库 `results/` 中，可直接查看）。
 2. **跑可视化绘图**：运行 `plot/` 下各脚本（`0` 到 `10`），图表会同时保存为 `.pdf` 和 `.png` 到 `results/figures/`。
 
 ## Beamer 编译说明

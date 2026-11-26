@@ -1,10 +1,17 @@
 # 系统
 .DS_Store
 
-# 原始数据与运行产物不进仓库（数据来源见 README / data/DATASET_CARD.md）
+# 原始大文件不进仓库（下载链接见 README）
 data/*
 !data/DATASET_CARD.md
-results/
+!data/leaderboard_2026/
+data/leaderboard_2026/*
+!data/leaderboard_2026/*.csv
+
+# results/ 保留小体量统计表与排名结果，忽略大型中间表和绘图输出
+results/figures/
+results/features.parquet
+results/unified*.parquet
 
 # Beamer 只保留 tex 源码，图片与演讲稿不进仓库
 beamer/*
